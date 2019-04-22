@@ -1,4 +1,4 @@
-# Simple-Python-Twitch-IRC-Bot
-A simple IRC-bot for twitch.tv written in python!
+# Twitch-Markov-Bot
+A simple twitch.tv IRC bot. Doesn't actually do Markov chaining yet.
 
 To run this program you'll need Python 3.4 or higher.
