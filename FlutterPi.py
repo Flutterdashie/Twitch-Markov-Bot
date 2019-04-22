@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-# simpleircbot.py - A simple IRC-bot written in python
+# FlutterPi.py - A simple IRC-bot written in python
 #
 # Copyright (C) 2015 : Niklas Hempel - http://liq-urt.de
-#
+# Modifications Copyright (C) 2019 Jacob Harris - https://github.com/Flutterdashie/
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -23,9 +23,9 @@ import socket
 # --------------------------------------------- Start Settings ----------------------------------------------------
 HOST = "irc.twitch.tv"                          # Hostname of the IRC-Server in this case twitch's
 PORT = 6667                                     # Default IRC-Port
-CHAN = "#testing"                               # Channelname = #{Nickname}
-NICK = "Testing"                                # Nickname = Twitch username
-PASS = "oauth:asdfg12345asdfg12345asdfg12345"   # www.twitchapps.com/tmi/ will help to retrieve the required authkey
+CHAN = "#flutterdash98"                         # Channelname = #{Nickname}
+NICK = "Flutterbot98"                           # Nickname = Twitch username
+PASS = "oauth:<redacted>"   # www.twitchapps.com/tmi/ will help to retrieve the required authkey
 # --------------------------------------------- End Settings -------------------------------------------------------
 
 
@@ -68,12 +68,19 @@ def get_sender(msg):
 
 def get_message(msg):
     result = ""
-    i = 3
+    i = 4
     length = len(msg)
     while i < length:
         result += msg[i] + " "
         i += 1
     result = result.lstrip(':')
+    return result
+
+
+def get_userdata(data):
+    r = re.compile(";([^;]*)=1;")
+    result = re.findall(r,data)
+    #print(result)
     return result
 
 
@@ -94,11 +101,15 @@ def command_test():
 
 def command_asdf():
     send_message(CHAN, 'asdfster')
+
+def send_def(msg):
+    send_message(CHAN,msg)
+    
 # --------------------------------------------- End Command Functions ----------------------------------------------
 
 con = socket.socket()
 con.connect((HOST, PORT))
-
+con.send(bytes('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands\r\n','utf-8'))
 send_pass(PASS)
 send_nick(NICK)
 join_channel(CHAN)
@@ -119,13 +130,21 @@ while True:
                 if line[0] == 'PING':
                     send_pong(line[1])
 
-                if line[1] == 'PRIVMSG':
-                    sender = get_sender(line[0])
+                elif line[2] == 'PRIVMSG':
+                    userdata = get_userdata(line[0])
+                    sender = get_sender(line[1])
                     message = get_message(line)
                     parse_message(message)
 
-                    print(sender + ": " + message)
+                    print(' '.join(userdata) + sender + ": " + message)
+                elif line[2] == 'WHISPER':
+                    sender = get_sender(line[1])
+                    message = get_message(line)
+                    parse_message(message)
 
+                    print(sender + " whispered: " + message)
+
+                #print(line)
     except socket.error:
         print("Socket died")
 
