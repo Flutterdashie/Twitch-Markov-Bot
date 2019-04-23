@@ -16,16 +16,17 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
-
+from unidecode import unidecode
 import re
 import socket
 
 # --------------------------------------------- Start Settings ----------------------------------------------------
 HOST = "irc.twitch.tv"                          # Hostname of the IRC-Server in this case twitch's
 PORT = 6667                                     # Default IRC-Port
-CHAN = "#flutterdash98"                         # Channelname = #{Nickname}
-NICK = "Flutterbot98"                           # Nickname = Twitch username
-PASS = "oauth:<redacted>"   # www.twitchapps.com/tmi/ will help to retrieve the required authkey
+with open('privatedata.txt','r') as f:          # Using this to prevent exposing my OAuth
+    CHAN = f.readline().strip('\n')             # And this to prevent channel changes causing updates to this file
+    NICK = f.readline().strip('\n')             # And this just because file completion.
+    PASS = f.readline().strip('\n')             # www.twitchapps.com/tmi/ will help to retrieve the required authkey
 # --------------------------------------------- End Settings -------------------------------------------------------
 
 
@@ -83,6 +84,22 @@ def get_userdata(data):
     #print(result)
     return result
 
+def get_cheer_amount(data):
+    for item in data.split(';'):
+        result = re.match(r"bits=(\d+)",item)
+        if not(result is None):
+            print("I DID IT")
+            print("REDDIT")
+            return int(result.group(1))
+    else:
+        print("no bitties here")
+        return 0
+
+def clean_userdata(data):
+    if(len(data) == 0):
+        return ""
+    else:
+        return ' '.join(data) + ' '
 
 def parse_message(msg):
     if len(msg) >= 1:
@@ -96,24 +113,24 @@ def parse_message(msg):
 
 # --------------------------------------------- Start Command Functions --------------------------------------------
 def command_test():
-    send_message(CHAN, 'testing some stuff')
+    print("no u")
 
 
 def command_asdf():
-    send_message(CHAN, 'asdfster')
+    print("who said that")
 
 def send_def(msg):
     send_message(CHAN,msg)
     
 # --------------------------------------------- End Command Functions ----------------------------------------------
-
+print('Connecting to {0} as {1}...'.format(CHAN,NICK))
 con = socket.socket()
 con.connect((HOST, PORT))
 con.send(bytes('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands\r\n','utf-8'))
 send_pass(PASS)
 send_nick(NICK)
 join_channel(CHAN)
-
+#CHEERMOTE = re.compile(r"\w{4,}?\d+")
 data = ""
 
 while True:
@@ -132,21 +149,27 @@ while True:
 
                 elif line[2] == 'PRIVMSG':
                     userdata = get_userdata(line[0])
+                    bits = get_cheer_amount(line[0])
                     sender = get_sender(line[1])
                     message = get_message(line)
                     parse_message(message)
 
-                    print(' '.join(userdata) + sender + ": " + message)
+                    if bits != 0:
+                        print("holy crap somebody cheered" + bits + " bits!")
+                    print(clean_userdata(userdata) + sender + ": " + unidecode(message))
                 elif line[2] == 'WHISPER':
                     sender = get_sender(line[1])
                     message = get_message(line)
                     parse_message(message)
 
-                    print(sender + " whispered: " + message)
+                    print(sender + " whispered: " + unidecode(message))
 
-                #print(line)
+                
+
     except socket.error:
         print("Socket died")
 
     except socket.timeout:
         print("Socket timeout")
+
+#@badge-info=subscriber/21;badges=subscriber/18;bits=100;color=#988634;display-name=DCraftiest;emotes=;flags=;id=601c95bc-54ee-4cdd-89d1-d76ff8e18b86;mod=0;room-id=21836069;subscriber=1;tmi-sent-ts=1555991744580;turbo=0;user-id=62964483;user-type=
