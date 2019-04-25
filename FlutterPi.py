@@ -79,8 +79,11 @@ def get_message(msg):
 
 
 def get_userdata(data):
+    #print(data)
     r = re.compile(";([^;]*)=1;")
     result = re.findall(r,data)
+    r1 = re.compile("(staff|vip)/1")
+    result += re.findall(r1,data)
     #print(result)
     return result
 
@@ -92,7 +95,7 @@ def get_cheer_amount(data):
             print("REDDIT")
             return int(result.group(1))
     else:
-        print("no bitties here")
+        #print("no bitties here")
         return 0
 
 def clean_userdata(data):
@@ -155,8 +158,9 @@ while True:
                     parse_message(message)
 
                     if bits != 0:
-                        print("holy crap somebody cheered" + bits + " bits!")
+                        print("holy crap somebody cheered " + str(bits) + " bits!")
                     print(clean_userdata(userdata) + sender + ": " + unidecode(message))
+                    print('-' * 40)
                 elif line[2] == 'WHISPER':
                     sender = get_sender(line[1])
                     message = get_message(line)
