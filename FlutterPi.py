@@ -38,6 +38,8 @@ def send_pong(msg):
 def send_message(chan, msg):
     con.send(bytes('PRIVMSG %s :%s\r\n' % (chan, msg), 'UTF-8'))
 
+def send_whisper(user, msg):
+    con.send(bytes('WHISPER %s :%s\r\n' % (user, msg), 'UTF-8'))
 
 def send_nick(nick):
     con.send(bytes('NICK %s\r\n' % nick, 'UTF-8'))
@@ -91,11 +93,8 @@ def get_cheer_amount(data):
     for item in data.split(';'):
         result = re.match(r"bits=(\d+)",item)
         if not(result is None):
-            print("I DID IT")
-            print("REDDIT")
             return int(result.group(1))
     else:
-        #print("no bitties here")
         return 0
 
 def clean_userdata(data):
@@ -104,23 +103,29 @@ def clean_userdata(data):
     else:
         return ' '.join(data) + ' '
 
-def parse_message(msg):
+def check_cmd(msg):
     if len(msg) >= 1:
         msg = msg.split(' ')
         options = {'!test': command_test,
-                   '!asdf': command_asdf}
+                   '!asdf': command_asdf,
+                   '!announce': command_announce}
         if msg[0] in options:
-            options[msg[0]]()
+            options[msg[0]](msg[1:])
 # --------------------------------------------- End Helper Functions -----------------------------------------------
 
 
 # --------------------------------------------- Start Command Functions --------------------------------------------
-def command_test():
+def command_test(data):
     print("no u")
 
+def command_announce(data) :
+    if data[0] is None:
+        send_whisper('flutterdash98',"test message please ignore")
+    else:
+        send_message(CHAN,' '.join(data))
 
-def command_asdf():
-    print("who said that")
+def command_asdf(data):
+    print("who said that? Was it " + data[0] + "?")
 
 def send_def(msg):
     send_message(CHAN,msg)
@@ -135,7 +140,7 @@ send_nick(NICK)
 join_channel(CHAN)
 #CHEERMOTE = re.compile(r"\w{4,}?\d+")
 data = ""
-
+send_whisper('flutterdash98','Program online')
 while True:
     try:
         data = data+con.recv(1024).decode('UTF-8')
@@ -155,7 +160,6 @@ while True:
                     bits = get_cheer_amount(line[0])
                     sender = get_sender(line[1])
                     message = get_message(line)
-                    parse_message(message)
 
                     if bits != 0:
                         print("holy crap somebody cheered " + str(bits) + " bits!")
@@ -164,9 +168,11 @@ while True:
                 elif line[2] == 'WHISPER':
                     sender = get_sender(line[1])
                     message = get_message(line)
-                    parse_message(message)
+                    if sender == "flutterdash98":
+                        check_cmd(message)
 
                     print(sender + " whispered: " + unidecode(message))
+                    print('-' * 40)
 
                 
 
