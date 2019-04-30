@@ -119,8 +119,10 @@ def command_test(data):
     print("no u")
 
 def command_announce(data) :
-    if data[0] is None:
+    print(data[0])
+    if data[0] is None or data[0] == '':
         send_whisper('flutterdash98',"test message please ignore")
+        print("oh a thing")
     else:
         send_message(CHAN,' '.join(data))
 
