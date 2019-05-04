@@ -156,7 +156,8 @@ while True:
             if len(line) >= 1:
                 if line[0] == 'PING':
                     send_pong(line[1])
-
+                elif len(line) <= 2:
+                    print("> " + line)
                 elif line[2] == 'PRIVMSG':
                     userdata = get_userdata(line[0])
                     bits = get_cheer_amount(line[0])
